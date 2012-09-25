@@ -23,7 +23,7 @@ module Legato
 
     attr_reader :parent_klass
     attr_accessor :profile, :start_date, :end_date
-    attr_accessor :sort, :limit, :offset#, :segment # individual, overwritten
+    attr_accessor :sort, :limit, :offset, :segment # individual, overwritten
     attr_accessor :filters # appended to, may add :segments later for dynamic segments
 
     def initialize(klass)
@@ -75,7 +75,7 @@ module Legato
     end
 
     def apply_basic_options(options)
-      [:sort, :limit, :offset, :start_date, :end_date].each do |key| #:segment
+      [:sort, :limit, :offset, :start_date, :end_date, :segment].each do |key| #:segment
         self.send("#{key}=".to_sym, options[key]) if options.has_key?(key)
       end
     end
@@ -184,7 +184,7 @@ module Legato
         'end-date' => Legato.format_time(end_date),
         'max-results' => limit,
         'start-index' => offset,
-        # 'segment' => segment_id,
+        'segment' => segment,
         'filters' => filters.to_params, # defaults to AND filtering
         'fields' => REQUEST_FIELDS
       }
