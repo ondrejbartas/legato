@@ -183,16 +183,17 @@ module Legato
       items.collect! do |items_block|
         items_block.split(",").collect do |item|
           if item.include?("~") # item has regular expresion
+            joiner = item.include?("=~") ? "," : ";"
             key, value = item.split("~") #get key (metric or dimension) + value (regular expression)
             #only if regular expression exceed 128 character limit
             if value.size > 128
               output = ["#{key}~"]
               value.split("|").each do |v|
                 output << "#{key}~" if output.last.size > 100
-                output[-1] += "|" unless /~$/
+                output[-1] += "|" unless /~$/ =~ output.last
                 output[-1] += v
               end
-              output.join(",") #split regular expression by | and put it into separate filters
+              output.join(joiner) #split regular expression by | and put it into separate filters
             else
               item
             end
