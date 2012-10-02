@@ -189,31 +189,24 @@ module Legato
       }
       # apply Custom Filter (definition from segment etc.)
       if custom_filter
-        #find joiner (AND | OR)
-        if custom_filter.include?(",") || custom_filter.include?(";") #has joiner
-          joiner = custom_filter.include?(",") ? "," : ";"
-        elsif custom_filter.include?("~") #has regular expression
-          joiner = custom_filter.include?("!") ? ";" : "," #if != then use AND, if == then OR
-        else #dafault joiner
-          joiner = ";"
-        end
-        #split filters by JOINERS
-        items = custom_filter.split(/;|,/)
+        items = custom_filter.split(/;/)
         #perform splitting of regular expression filters with | to separate filters
-        items.collect! do |item|
-          if item.include?("~") # item has regular expresion
-            key, value = item.split("~") #get key (metric or dimension) + value (regular expression)
-            #only if regular expression exceed 128 character limit
-            if value.size > 128
-              value.split("|").collect{|v| "#{key}~#{v}" } #split regular expression by | and put it into separate filters
-            else
+        items.collect! do |items_block|
+          items_block.split(",").collect do |item|
+            if item.include?("~") # item has regular expresion
+              key, value = item.split("~") #get key (metric or dimension) + value (regular expression)
+              #only if regular expression exceed 128 character limit
+              if value.size > 128
+                value.split("|").collect{|v| "#{key}~#{v}" }.join(",") #split regular expression by | and put it into separate filters
+              else
+                item
+              end
+            else #it is normal item
               item
             end
-          else #it is normal item
-            item
-          end
+          end.join(",")
         end.flatten!
-        params['filters'] = items.join(joiner)
+        params['filters'] = items.join(";")
       else
         params['filters'] = filters.to_params # defaults to AND filtering
       end
