@@ -216,8 +216,7 @@ module Legato
       }
       # apply Custom Filter (definition from segment etc.)
       if custom_filter
-
-        params['filters'] = normalize_filters items
+        params['filters'] = normalize_filters custom_filter
       else
         params['filters'] = normalize_filters filters.to_params # defaults to AND filtering
       end
