@@ -177,6 +177,27 @@ module Legato
       profile && Legato.to_ga_string(profile.id)
     end
 
+    def normalize_filters custom_filter
+      items = custom_filter.split(/;/)
+      #perform splitting of regular expression filters with | to separate filters
+      items.collect! do |items_block|
+        items_block.split(",").collect do |item|
+          if item.include?("~") # item has regular expresion
+            key, value = item.split("~") #get key (metric or dimension) + value (regular expression)
+            #only if regular expression exceed 128 character limit
+            if value.size > 128
+              value.split("|").collect{|v| "#{key}~#{v}" }.join(",") #split regular expression by | and put it into separate filters
+            else
+              item
+            end
+          else #it is normal item
+            item
+          end
+        end.join(",")
+      end.flatten!
+      items.join(";")
+    end
+
     def to_params
       params = {
         'ids' => profile_id,
@@ -189,26 +210,10 @@ module Legato
       }
       # apply Custom Filter (definition from segment etc.)
       if custom_filter
-        items = custom_filter.split(/;/)
-        #perform splitting of regular expression filters with | to separate filters
-        items.collect! do |items_block|
-          items_block.split(",").collect do |item|
-            if item.include?("~") # item has regular expresion
-              key, value = item.split("~") #get key (metric or dimension) + value (regular expression)
-              #only if regular expression exceed 128 character limit
-              if value.size > 128
-                value.split("|").collect{|v| "#{key}~#{v}" }.join(",") #split regular expression by | and put it into separate filters
-              else
-                item
-              end
-            else #it is normal item
-              item
-            end
-          end.join(",")
-        end.flatten!
-        params['filters'] = items.join(";")
+
+        params['filters'] = normalize_filters items
       else
-        params['filters'] = filters.to_params # defaults to AND filtering
+        params['filters'] = normalize_filters filters.to_params # defaults to AND filtering
       end
 
       [metrics, dimensions, sort].each do |list|
