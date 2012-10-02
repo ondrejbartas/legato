@@ -186,7 +186,13 @@ module Legato
             key, value = item.split("~") #get key (metric or dimension) + value (regular expression)
             #only if regular expression exceed 128 character limit
             if value.size > 128
-              value.split("|").collect{|v| "#{key}~#{v}" }.join(",") #split regular expression by | and put it into separate filters
+              output = ["#{key}~"]
+              value.split("|").each do |v|
+                output << "#{key}~" if output.last.size > 100
+                output[-1] += "|" unless /~$/
+                output[-1] += v
+              end
+              output.join(",") #split regular expression by | and put it into separate filters
             else
               item
             end
