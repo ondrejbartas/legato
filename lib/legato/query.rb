@@ -178,6 +178,7 @@ module Legato
     end
 
     def normalize_filters custom_filter
+      return nil if custom_filter.nil?
       items = custom_filter.split(/;/)
       #perform splitting of regular expression filters with | to separate filters
       items.collect! do |items_block|
